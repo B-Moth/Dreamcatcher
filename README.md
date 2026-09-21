@@ -1,6 +1,7 @@
 # Dreamcatcher
 
 The DreamCatcher is the physical bedside device in the DreamJournal system. It sits on your nightstand, records your voice each morning, and uploads the recording to DreamServer for transcription.
+You can find the repo for DreamServer here : https://github.com/B-Moth/Dreamserver_source_public
 
 ---
 
