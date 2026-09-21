@@ -1,0 +1,24 @@
+sandman:
+  host: "sandman"        # Tailscale hostname
+  port: 8765
+  api_key: "your-api-key-here"    # We'll set a real key later
+
+recording:
+  sample_rate: 16000
+  channels: 1
+  format: "S16_LE"
+  stop_on_release: false  # false = press to start, press to stop
+  max_duration_minutes: 10
+
+power:
+  auto_sleep_minutes: 10
+  skip_sleep_when_plugged_in: true
+
+display:
+  brightness: 200
+
+gpio:
+  button_record: 17
+  button_up: 27
+  button_down: 22
+  button_back: 23

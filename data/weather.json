@@ -1,0 +1,10 @@
+{
+    "temperature": 26.7,
+    "weather_code": 3,
+    "weather": "cloud",
+    "rain": 0.0,
+    "snowfall": 0.0,
+    "cloud_cover": 100,
+    "is_day": 1,
+    "time": "2026-08-18T19:15"
+}
