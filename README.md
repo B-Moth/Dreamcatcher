@@ -47,7 +47,7 @@ Standalone modules to build:
 - `display.py` — OLED rendering (clock face, status screens, animations)
 - `buttons.py` — Encoder rotation and button events with debounce
 - `menu.py` — State machine (IDLE → RECORDING → UPLOADING → ERROR)
-- `connection.py` — Background Sandman health monitor
+- `connection.py` — Background DreamServer health monitor
 
 ---
 

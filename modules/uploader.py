@@ -1,8 +1,8 @@
 """
 uploader.py — Audio upload module for DreamCatcher
-- Sends recorded audio to Sandman via HTTP POST
+- Sends recorded audio to DreamServer via HTTP POST
 - Manages a local queue for offline uploads
-- Retries automatically when Sandman is back online
+- Retries automatically when DreamServer is back online
 - Updates meta.json after successful upload
 """
 
@@ -32,12 +32,12 @@ def _load_config():
 
 class Uploader:
     """
-    Manages uploading audio entries to Sandman.
+    Manages uploading audio entries to DreamServer.
 
     Usage:
         u = Uploader(on_status=my_callback)
         u.start()
-        u.enqueue(Path("/home/sandman/dreamjournal/queue/2024-03-01_06h12"))
+        u.enqueue(Path("/home/dreamserver/dreamjournal/queue/2024-03-01_06h12"))
 
     on_status(status, entry_path) is called with:
         status = "uploading" | "success" | "error" | "queued"
@@ -48,7 +48,7 @@ class Uploader:
         self._queue         = queue.Queue()
         self._thread        = threading.Thread(target=self._worker, daemon=True)
         self._active        = False   # True while uploading
-        self._sandman_up    = False   # Last known Sandman status
+        self._dreamserver_up = False   # Last known DreamServer status
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -85,9 +85,9 @@ class Uploader:
         return self._active
 
     @property
-    def sandman_reachable(self):
-        """Last known Sandman reachability status."""
-        return self._sandman_up
+    def dreamserver_reachable(self):
+        """Last known DreamServer reachability status."""
+        return self._dreamserver_up
 
     # ── Internal ───────────────────────────────────────────────────────────────
 
@@ -110,12 +110,12 @@ class Uploader:
                 self._queue.task_done()
 
     def _upload_entry(self, entry_path: Path):
-        """Upload a single entry to Sandman."""
-        config  = _load_config()
-        sandman = config.get("sandman", {})
-        host    = sandman.get("host", "sandman")
-        port    = sandman.get("port", 8765)
-        api_key = sandman.get("api_key", "")
+        """Upload a single entry to DreamServer."""
+        config      = _load_config()
+        dreamserver = config.get("dreamserver", {})
+        host        = dreamserver.get("host", "dreamserver")
+        port        = dreamserver.get("port", 8765)
+        api_key     = dreamserver.get("api_key", "")
         url     = f"http://{host}:{port}/upload"
 
         audio_file = entry_path / "audio.wav"
@@ -147,7 +147,7 @@ class Uploader:
             )
 
         if response.status_code == 200:
-            self._sandman_up = True
+            self._dreamserver_up = True
             log.info(f"Upload successful: {entry_path.name}")
             _update_meta(entry_path, {
                 "uploaded":    True,
@@ -157,13 +157,13 @@ class Uploader:
                 self.on_status("success", entry_path)
         else:
             raise RuntimeError(
-                f"Sandman returned {response.status_code}: {response.text}"
+                f"DreamServer returned {response.status_code}: {response.text}"
             )
 
 
 class ConnectionMonitor:
     """
-    Background thread that periodically pings Sandman's /health endpoint.
+    Background thread that periodically pings DreamServer's /health endpoint.
     Updates connection status and flushes the upload queue on reconnection.
 
     Usage:
@@ -196,7 +196,7 @@ class ConnectionMonitor:
 
             if reachable and not self._connected:
                 # Just came back online
-                log.info("Sandman is back online — flushing upload queue")
+                log.info("DreamServer is back online — flushing upload queue")
                 self._connected = True
                 if self.on_status:
                     self.on_status(True)
@@ -204,7 +204,7 @@ class ConnectionMonitor:
 
             elif not reachable and self._connected:
                 # Just went offline
-                log.warning("Sandman is unreachable")
+                log.warning("DreamServer is unreachable")
                 self._connected = False
                 if self.on_status:
                     self.on_status(False)
@@ -213,11 +213,11 @@ class ConnectionMonitor:
             time.sleep(interval)
 
     def _ping(self):
-        """Ping Sandman's health endpoint. Returns True if reachable."""
-        config  = _load_config()
-        sandman = config.get("sandman", {})
-        host    = sandman.get("host", "sandman")
-        port    = sandman.get("port", 8765)
+        """Ping DreamServer's health endpoint. Returns True if reachable."""
+        config      = _load_config()
+        dreamserver = config.get("dreamserver", {})
+        host        = dreamserver.get("host", "dreamserver")
+        port        = dreamserver.get("port", 8765)
         url     = f"http://{host}:{port}/health"
         try:
             r = requests.get(url, timeout=5)
@@ -251,7 +251,7 @@ def _now_iso():
 
 if __name__ == "__main__":
     """
-    Quick test: attempts to upload the most recent queue entry to Sandman.
+    Quick test: attempts to upload the most recent queue entry to DreamServer.
     Usage: python3 uploader.py
     """
     logging.basicConfig(
